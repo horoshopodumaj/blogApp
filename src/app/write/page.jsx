@@ -3,18 +3,30 @@
 import { app } from "@/utils/firebase";
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
 import { useSession } from "next-auth/react";
-//import dynamic from "next/dynamic";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import ReactQuill from "react-quill";
+import { useEffect, useRef, useState } from "react";
 import "react-quill/dist/quill.bubble.css";
 import styles from "./write.module.css";
 
+const ReactQuill = dynamic(
+    async () => {
+        const { default: RQ } = await import("react-quill");
+
+        function QuillJS({ forwardedRef, ...props }) {
+            return <RQ ref={forwardedRef} {...props} />;
+        }
+
+        return QuillJS;
+    },
+    {
+        ssr: false,
+    }
+);
+
 const WritePage = () => {
     const { status } = useSession();
-    // const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
-
     const router = useRouter();
 
     const [file, setFile] = useState(null);
@@ -23,7 +35,8 @@ const WritePage = () => {
     const [value, setValue] = useState("");
     const [title, setTitle] = useState("");
     const [catSlug, setCatSlug] = useState("");
-
+    const quillRef = useRef(null);
+    console.log(quillRef.current?.value);
     useEffect(() => {
         const storage = getStorage(app);
         const upload = () => {
@@ -79,7 +92,7 @@ const WritePage = () => {
             method: "POST",
             body: JSON.stringify({
                 title,
-                desc: value,
+                desc: quillRef.current?.value || "",
                 img: media,
                 slug: slugify(title),
                 catSlug: catSlug || "style",
@@ -91,6 +104,7 @@ const WritePage = () => {
             router.push(`/posts/${data.slug}`);
         }
     };
+
     return (
         <div className={styles.container}>
             <input type="text" placeholder="Title" className={styles.input} onChange={(e) => setTitle(e.target.value)} value={title} />
@@ -126,7 +140,7 @@ const WritePage = () => {
                         </button>
                     </div>
                 )}
-                <ReactQuill className={styles.textArea} theme="bubble" value={value} onChange={setValue} placeholder="Tell your story..." />
+                <ReactQuill forwardedRef={quillRef} className={styles.textArea} theme="bubble" placeholder="Tell your story..." />
             </div>
             <button className={styles.publish} onClick={handleSubmit}>
                 Publish
