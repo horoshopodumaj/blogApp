@@ -12,7 +12,9 @@ export const Navbar = () => {
                 <Image src="/vk.png" alt="vk" width={24} height={24} />
                 <Image src="/youtube.png" alt="youtube" width={24} height={24} />
             </div>
-            <div className={styles.logo}>Blog</div>
+            <Link href="/" className={styles.logo}>
+                <div className={styles.logo}>Blog</div>
+            </Link>
             <div className={styles.links}>
                 <ThemeToggle />
                 <Link href="/" className={styles.link}>
